@@ -1,6 +1,6 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.sensors.Pigeon2;
+import com.ctre.phoenix.sensors.WPI_Pigeon2;
 
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -14,7 +14,7 @@ public class SwerveDrive extends SubsystemBase {
     private final SwerveModule mod_topRight;
     private final SwerveModule mod_botRight;
 
-    private final Pigeon2 s_gyro;
+    private final WPI_Pigeon2 s_gyro;
     private double angleHeading;
 
     public SwerveDrive() {
@@ -27,7 +27,8 @@ public class SwerveDrive extends SubsystemBase {
         mod_botRight = new SwerveModule(Swerve.RotationMotors.ID.BR_ID, 
             Swerve.RotationMotors.ID.CANCoder_ID, Swerve.Wheels.ID.BR_ID);
 
-        s_gyro = new Pigeon2(Swerve.kGyroID);
+        s_gyro = new WPI_Pigeon2(Swerve.kGyroID);
+        zeroHeading();
     }
 
     public SwerveModule[] getModules() {
@@ -45,7 +46,11 @@ public class SwerveDrive extends SubsystemBase {
         mod_topRight.getWheel().setSpeed(modules[1].speedMetersPerSecond);
         mod_botLeft.getWheel().setSpeed(modules[2].speedMetersPerSecond);
         mod_botRight.getWheel().setSpeed(modules[3].speedMetersPerSecond);
-    } 
+    }
+
+    public void zeroHeading() {
+        s_gyro.reset();
+    }
 
     public double getHeadingRad() {
         return Math.toRadians(angleHeading);
