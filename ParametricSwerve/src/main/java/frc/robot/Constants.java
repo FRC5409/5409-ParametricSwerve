@@ -14,6 +14,59 @@ package frc.robot;
  */
 public final class Constants {
   public static class OperatorConstants {
-    public static final int kDriverControllerPort = 0;
+    public static final int kDriverControllerPort            = 0;
+  }
+
+  public static class Swerve {
+    public static class Modules {
+    }
+    
+    public static class Wheels {
+      public static final int kCurrentLim                    = 30; //placeholder
+      public static final double kVelConversionFactor        = 0; //placeholder
+
+      public static final class ID {
+        public static final int TL_ID                        = 0; //placeholder
+        public static final int TR_ID                        = 0; //placeholder
+        public static final int BL_ID                        = 0; //placeholder
+        public static final int BR_ID                        = 0; //placeholder
+      }
+
+      public static final class MotionProfiling {
+        public static final double kMaxWheelVel              = 0; //placeholder (units = rpm)
+        public static final double kMaxWheelAccel            = 0; //placeholder (units = rpm/s)
+        public static final double kMinWheelVel              = 0; //placeholder (units = rpm)
+        public static final double kError                    = 0;
+
+        public static final double kP                        = 0; //placeholder
+        public static final double kI                        = 0; //placeholder
+        public static final double kD                        = 0; //placeholder
+        public static final double kF                        = 0; //placeholder
+      }
+    }
+    public static class RotationMotors {
+      public static final int kCurrentLim                    = 0; //placeholder
+
+      public static class ID {
+        public static final int TL_ID                        = 0; //placeholder
+        public static final int TR_ID                        = 0; //placeholder
+        public static final int BL_ID                        = 0; //placeholder
+        public static final int BR_ID                        = 0; //placeholder
+        public static final int CANCoder_ID                  = 0; //placeholder
+      }
+
+      public static class MotionProfiling {
+        public static final double kP                        = 0; //placeholder
+        public static final double kI                        = 0; //placeholder
+        public static final double kD                        = 0; //placeholder
+        public static final double kF                        = 0; //placeholder
+
+        public static final double kEncoderOffset            = 0; //placeholder
+
+        public static final double maxVel                    = 0; //placeholder
+        public static final double maxAccel                  = 0; //placeholder
+        public static final double maxOutput                 = 0; //placeholder
+      }
+    }
   }
 }
