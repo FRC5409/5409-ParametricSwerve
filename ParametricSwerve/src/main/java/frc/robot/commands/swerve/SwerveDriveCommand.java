@@ -1,6 +1,13 @@
 package frc.robot.commands.swerve;
 
+import edu.wpi.first.math.WPIMathJNI;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.Swerve;
 import frc.robot.subsystems.swerveModules.REVRotator;
 import frc.robot.subsystems.swerveModules.SwerveDrive;
 import frc.robot.subsystems.swerveModules.SwerveModule;
@@ -9,14 +16,18 @@ import frc.robot.subsystems.swerveModules.Wheels;
 public class SwerveDriveCommand extends CommandBase {
 
     private final SwerveDrive sys_drive;
+    private final CommandXboxController c_joystick;
 
-    public SwerveDriveCommand(SwerveDrive subsystem) {
+    private final SwerveModule mod_1, mod_2, mod_3, mod_4;
+
+    public SwerveDriveCommand(SwerveDrive subsystem, CommandXboxController joystick) {
         sys_drive = subsystem;
+        c_joystick = joystick;
         // Use addRequirements() here to declare subsystem dependencies.
-        SwerveModule mod_1 = sys_drive.getModules()[0];
-        SwerveModule mod_2 = sys_drive.getModules()[1];
-        SwerveModule mod_3 = sys_drive.getModules()[2];
-        SwerveModule mod_4 = sys_drive.getModules()[3];
+        mod_1 = sys_drive.getModules()[0];
+        mod_2 = sys_drive.getModules()[1];
+        mod_3 = sys_drive.getModules()[2];
+        mod_4 = sys_drive.getModules()[3];
         REVRotator rot_1 = mod_1.getRotator();
         REVRotator rot_2 = mod_2.getRotator();
         REVRotator rot_3 = mod_3.getRotator();
@@ -54,7 +65,32 @@ public class SwerveDriveCommand extends CommandBase {
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() {
+        double directionX = c_joystick.getLeftX() * Swerve.Wheels.MotionProfiling.kMaxWheelVel;
+        double directionY = c_joystick.getLeftY() * Swerve.Wheels.MotionProfiling.kMaxWheelVel;
+
+        if ((directionX >= 0.05 || directionX <= -0.05) || (directionY >= 0.05 || directionY <= -0.05)) { 
+            double directionVel = Math.hypot(directionX, directionY);
+            if (directionVel >= 1) {
+                directionVel = 1;
+            }   
+
+            Rotation2d rotation = new Rotation2d(directionX, directionY);
+            SwerveModuleState destinationState = new SwerveModuleState(directionVel, rotation);
+
+            SwerveModuleState tl_moveState = SwerveModuleState.optimize(destinationState, mod_1.getCurrentAngleRad());
+            SwerveModuleState tr_moveState = SwerveModuleState.optimize(destinationState, mod_2.getCurrentAngleRad());
+            SwerveModuleState bl_moveState = SwerveModuleState.optimize(destinationState, mod_3.getCurrentAngleRad());
+            SwerveModuleState br_moveState = SwerveModuleState.optimize(destinationState, mod_4.getCurrentAngleRad());
+        } else {
+            SwerveModuleState tl_moveState = new SwerveModuleState(0, mod_1.getCurrentAngleRad());
+            SwerveModuleState tr_moveState = new SwerveModuleState(0, mod_2.getCurrentAngleRad());
+            SwerveModuleState bl_moveState = new SwerveModuleState(0, mod_3.getCurrentAngleRad());
+            SwerveModuleState br_moveState = new SwerveModuleState(0, mod_4.getCurrentAngleRad());
+        }
+
+
         
+
     }
 
     // Called once the command ends or is interrupted.

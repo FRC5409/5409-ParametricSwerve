@@ -18,9 +18,8 @@ public final class Constants {
   }
 
   public static class Swerve {
-    public static class Modules {
-    }
-    
+    public static final int kGyroID                          = 0; //placeholder
+
     public static class Wheels {
       public static final int kCurrentLim                    = 30; //placeholder
       public static final double kVelConversionFactor        = 0; //placeholder

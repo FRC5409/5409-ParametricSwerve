@@ -22,6 +22,10 @@ public class SwerveModule extends SubsystemBase {
         sys_rotator);
     }
 
+    public Rotation2d getCurrentAngleRad() {
+        return new Rotation2d(Math.toRadians(sys_rotator.getPosition()));
+    }
+
     public REVRotator getRotator() {
         return sys_rotator;
     }
