@@ -22,6 +22,14 @@ public class SwerveModule extends SubsystemBase {
         sys_rotator);
     }
 
+    public REVRotator getRotator() {
+        return sys_rotator;
+    }
+
+    public Wheels getWheel() {
+        return sys_wheels;
+    }
+
     public SwerveModuleState createModuleState(double velocityX, double velocityY) {
         Rotation2d rotationVector = new Rotation2d(velocityX, velocityY);
         return new SwerveModuleState(Math.hypot(velocityX, velocityY), rotationVector);

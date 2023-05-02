@@ -21,6 +21,11 @@ public class SwerveDrive extends SubsystemBase {
             Swerve.RotationMotors.ID.CANCoder_ID, Swerve.Wheels.ID.BR_ID);
     }
 
+    public SwerveModule[] getModules() {
+        SwerveModule[] modules = {mod_topLeft, mod_botLeft, mod_topRight, mod_botRight};
+        return modules;
+    }
+
     @Override
     public void periodic() {
         // This method will be called once per scheduler run
