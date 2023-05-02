@@ -7,7 +7,9 @@ package frc.robot;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.swerve.SwerveDriveCommand;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.SwerveDrive;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -26,8 +28,17 @@ public class RobotContainer {
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
+  private final SwerveDrive sys_driveTrain;
+  private final SwerveDriveCommand cmd_driveController;
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+
+    sys_driveTrain = new SwerveDrive();
+    cmd_driveController = new SwerveDriveCommand(sys_driveTrain, m_driverController);
+
+    sys_driveTrain.setDefaultCommand(cmd_driveController);
+
     // Configure the trigger bindings
     configureBindings();
   }

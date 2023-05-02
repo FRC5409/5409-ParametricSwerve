@@ -19,6 +19,8 @@ public final class Constants {
 
   public static class Swerve {
     public static final int kGyroID                          = 0; //placeholder
+    public static final double chassisX                      = 0; //placeholder (units = cm)
+    public static final double chassisY                      = 0; //placeholder (units = cm)
 
     public static class Wheels {
       public static final int kCurrentLim                    = 30; //placeholder
