@@ -35,7 +35,7 @@ public class REVRotator extends ProfiledPIDSubsystem {
         m_rotator = new CANSparkMax(mot_ID, MotorType.kBrushless);
         m_rotator.restoreFactoryDefaults();
         m_rotator.setSmartCurrentLimit(RotationMotors.kCurrentLim);
-        m_rotator.setIdleMode(IdleMode.kCoast);
+        m_rotator.setIdleMode(IdleMode.kBrake);
         m_rotator.burnFlash();
 
         c_pidController = m_rotator.getPIDController();

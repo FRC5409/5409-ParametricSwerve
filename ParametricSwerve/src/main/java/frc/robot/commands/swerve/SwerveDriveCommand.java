@@ -77,16 +77,14 @@ public class SwerveDriveCommand extends CommandBase {
     @Override
     public void execute() {
         // Joystick values , mapped from analog input to a velocity range from 0 m/s to the maximum velocity specified in constants
-        double directionX = c_joystick.getLeftX() * Swerve.Wheels.MotionProfiling.kMaxWheelVel;
-        double directionY = c_joystick.getLeftY() * Swerve.Wheels.MotionProfiling.kMaxWheelVel;
+        double directionX = c_joystick.getLeftX();
+        double directionY = c_joystick.getLeftY();
+        double directionVel = Math.hypot(directionX, directionY)  * Swerve.Wheels.MotionProfiling.kMaxWheelVel;
         double turnX = c_joystick.getRightX() * Swerve.Wheels.MotionProfiling.kMaxWheelVel;
 
         // only perform vector math when joysticks pass threshhold
-        if ((directionX >= 0.05 || directionX <= -0.05) || (directionY >= 0.05 || directionY <= -0.05)) { 
+        if ((directionVel >= 0.05 || directionVel <= -0.05)) { 
             moving = true;
-
-            // get the true velocity based on x,y components of the joystick
-            double directionVel = Math.hypot(directionX, directionY);
 
             // get the angle of rotation for the swerve module, adds the heading of the robot to achieve field oriented angle of rotation
             double fieldAngle = Math.atan2(directionY, directionX) + sys_drive.getHeadingRad();
@@ -131,15 +129,30 @@ public class SwerveDriveCommand extends CommandBase {
             Translation2d br_combinedVector = br_moveTranslation.plus(br_turnTranslation);
 
             // create swerve module states using the combined vectors and optimize movement from the current angle to the desired angle
-            SwerveModuleState tl_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(tl_combinedVector.getX(), tl_combinedVector.getY()), tl_combinedVector.getAngle()), mod_topLeft.getCurrentAngleRad());
-            SwerveModuleState tr_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(tr_combinedVector.getX(), tr_combinedVector.getY()), tr_combinedVector.getAngle()), mod_topRight.getCurrentAngleRad());
-            SwerveModuleState bl_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(bl_combinedVector.getX(), bl_combinedVector.getY()), bl_combinedVector.getAngle()), mod_botLeft.getCurrentAngleRad());
-            SwerveModuleState br_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(br_combinedVector.getX(), br_combinedVector.getY()), br_combinedVector.getAngle()), mod_botRight.getCurrentAngleRad());
+            if (moving && !turning || moving && turning) {
 
-            SwerveModuleState[] states = {tl_combinedState, tr_combinedState, bl_combinedState, br_combinedState};
+                // if moving or moving and turning use the combined vectors for wheel angle but use left-stick for ouput
+                SwerveModuleState tl_combinedState = SwerveModuleState.optimize(new SwerveModuleState(directionVel, tl_combinedVector.getAngle()), mod_topLeft.getCurrentAngleRad());
+                SwerveModuleState tr_combinedState = SwerveModuleState.optimize(new SwerveModuleState(directionVel, tr_combinedVector.getAngle()), mod_topRight.getCurrentAngleRad());
+                SwerveModuleState bl_combinedState = SwerveModuleState.optimize(new SwerveModuleState(directionVel, bl_combinedVector.getAngle()), mod_botLeft.getCurrentAngleRad());
+                SwerveModuleState br_combinedState = SwerveModuleState.optimize(new SwerveModuleState(directionVel, br_combinedVector.getAngle()), mod_botRight.getCurrentAngleRad());
+                
+                // pass the states to the drivetrain
+                SwerveModuleState[] states = {tl_combinedState, tr_combinedState, bl_combinedState, br_combinedState};
+                sys_drive.setStates(states);
+            } else {
+                // if only turning use the output from the right stick X axis
+                SwerveModuleState tl_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(tl_combinedVector.getX(), tl_combinedVector.getY()), tl_combinedVector.getAngle()), mod_topLeft.getCurrentAngleRad());
+                SwerveModuleState tr_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(tr_combinedVector.getX(), tr_combinedVector.getY()), tr_combinedVector.getAngle()), mod_topRight.getCurrentAngleRad());
+                SwerveModuleState bl_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(bl_combinedVector.getX(), bl_combinedVector.getY()), bl_combinedVector.getAngle()), mod_botLeft.getCurrentAngleRad());
+                SwerveModuleState br_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(br_combinedVector.getX(), br_combinedVector.getY()), br_combinedVector.getAngle()), mod_botRight.getCurrentAngleRad());
+                
+                // pass the states to the drivetrain
+                SwerveModuleState[] states = {tl_combinedState, tr_combinedState, bl_combinedState, br_combinedState};
+                sys_drive.setStates(states);
+            }
 
-            // pass the states to the drivetrain
-            sys_drive.setStates(states);
+
         } else {
 
             // creates idling module states
