@@ -89,7 +89,7 @@ public class SwerveDriveCommand extends CommandBase {
             double directionVel = Math.hypot(directionX, directionY);
 
             // get the angle of rotation for the swerve module, adds the heading of the robot to achieve field oriented angle of rotation
-            double fieldAngle = Math.atan(directionY/directionX) * Math.PI/180 + sys_drive.getHeadingRad();
+            double fieldAngle = Math.atan2(directionY, directionX) + sys_drive.getHeadingRad();
             Rotation2d rotation = new Rotation2d(fieldAngle);
             
             // create 2d vectorsof magnitude and direction for movement
@@ -107,16 +107,16 @@ public class SwerveDriveCommand extends CommandBase {
             turning = true;
 
             // create default angular vectors for rotation (perpendicular to centre of rotation)
-            Rotation2d tl_angle = new Rotation2d(Math.atan((Swerve.chassisY/2)/(Swerve.chassisX/2)));
-            Rotation2d tr_angle = new Rotation2d(Math.atan((Swerve.chassisY/2)/(Swerve.chassisX/2)) - Math.PI/2);
-            Rotation2d bl_angle = new Rotation2d(Math.atan((Swerve.chassisY/2)/(Swerve.chassisX/2)) + Math.PI/2);
-            Rotation2d br_angle = new Rotation2d(Math.atan((Swerve.chassisY/2)/(Swerve.chassisX/2)));
+            Rotation2d tl_angle = new Rotation2d(Math.atan2(Swerve.chassisY/2.0, Swerve.chassisX/2.0));
+            Rotation2d tr_angle = new Rotation2d(Math.atan2(-Swerve.chassisY/2.0, Swerve.chassisX/2.0));
+            Rotation2d bl_angle = new Rotation2d(Math.atan2(Swerve.chassisY/2.0, -Swerve.chassisX/2.0));
+            Rotation2d br_angle = new Rotation2d(Math.atan2(-Swerve.chassisY/2.0, -Swerve.chassisX/2.0));
 
             // create 2d vectors for turning by assigning magnitudes to the angular vectors
             tl_turnTranslation = new Translation2d(turnX, tl_angle);
             tr_turnTranslation = new Translation2d(turnX, tr_angle);
             bl_turnTranslation = new Translation2d(turnX, bl_angle);
-            br_turnTranslation = new Translation2d(-turnX, br_angle);
+            br_turnTranslation = new Translation2d(turnX, br_angle);
 
         } else {
             turning = false;
