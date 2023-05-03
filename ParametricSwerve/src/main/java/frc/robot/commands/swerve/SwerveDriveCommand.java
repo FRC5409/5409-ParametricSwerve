@@ -18,6 +18,19 @@ public class SwerveDriveCommand extends CommandBase {
 
     private final SwerveModule mod_topLeft, mod_topRight, mod_botLeft, mod_botRight;
 
+    private boolean turning;
+    private boolean moving;
+
+    private Translation2d tl_moveTranslation;
+    private Translation2d tr_moveTranslation;
+    private Translation2d bl_moveTranslation;
+    private Translation2d br_moveTranslation;
+     
+    private Translation2d tl_turnTranslation;
+    private Translation2d tr_turnTranslation;
+    private Translation2d bl_turnTranslation;
+    private Translation2d br_turnTranslation;
+
     public SwerveDriveCommand(SwerveDrive subsystem, CommandXboxController joystick) {
         sys_drive = subsystem;
         c_joystick = joystick;
@@ -63,72 +76,83 @@ public class SwerveDriveCommand extends CommandBase {
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() {
+        // Joystick values , mapped from analog input to a velocity range from 0 m/s to the maximum velocity specified in constants
         double directionX = c_joystick.getLeftX() * Swerve.Wheels.MotionProfiling.kMaxWheelVel;
         double directionY = c_joystick.getLeftY() * Swerve.Wheels.MotionProfiling.kMaxWheelVel;
         double turnX = c_joystick.getRightX() * Swerve.Wheels.MotionProfiling.kMaxWheelVel;
 
-        Translation2d tl_moveTranslation;
-        Translation2d tr_moveTranslation;
-        Translation2d bl_moveTranslation;
-        Translation2d br_moveTranslation;
-        
-        Translation2d tl_turnTranslation;
-        Translation2d tr_turnTranslation;
-        Translation2d bl_turnTranslation;
-        Translation2d br_turnTranslation;
-
+        // only perform vector math when joysticks pass threshhold
         if ((directionX >= 0.05 || directionX <= -0.05) || (directionY >= 0.05 || directionY <= -0.05)) { 
+            moving = true;
+
+            // get the true velocity based on x,y components of the joystick
             double directionVel = Math.hypot(directionX, directionY);
 
+            // get the angle of rotation for the swerve module, adds the heading of the robot to achieve field oriented angle of rotation
             double fieldAngle = Math.atan(directionY/directionX) * Math.PI/180 + sys_drive.getHeadingRad();
-
             Rotation2d rotation = new Rotation2d(fieldAngle);
             
+            // create 2d vectorsof magnitude and direction for movement
             tl_moveTranslation = new Translation2d(directionVel, rotation);
             tr_moveTranslation = new Translation2d(directionVel, rotation);
             bl_moveTranslation = new Translation2d(directionVel, rotation);
             br_moveTranslation = new Translation2d(directionVel, rotation);
 
         } else {
-            tl_moveTranslation = new Translation2d(0, mod_topLeft.getCurrentAngleRad());
-            tr_moveTranslation = new Translation2d(0, mod_topRight.getCurrentAngleRad());
-            bl_moveTranslation = new Translation2d(0, mod_botLeft.getCurrentAngleRad());
-            br_moveTranslation = new Translation2d(0, mod_botRight.getCurrentAngleRad());
+            moving = false;
         }
 
 
         if (turnX >= 0.05 || turnX <= -0.05) {
-            
-            Rotation2d tl_angle = new Rotation2d(Math.atan((-Swerve.chassisY/2)/(Swerve.chassisX/2)) + Math.PI/2);
-            Rotation2d tr_angle = new Rotation2d(Math.atan((-Swerve.chassisY/2)/(-Swerve.chassisX/2)) - Math.PI/2);
-            Rotation2d bl_angle = new Rotation2d(Math.atan((Swerve.chassisY/2)/(Swerve.chassisX/2)) + Math.PI/2);
-            Rotation2d br_angle = new Rotation2d(Math.atan((Swerve.chassisY/2)/(-Swerve.chassisX/2)) - Math.PI/2);
+            turning = true;
 
+            // create default angular vectors for rotation (perpendicular to centre of rotation)
+            Rotation2d tl_angle = new Rotation2d(Math.atan((Swerve.chassisY/2)/(Swerve.chassisX/2)));
+            Rotation2d tr_angle = new Rotation2d(Math.atan((Swerve.chassisY/2)/(Swerve.chassisX/2)) - Math.PI/2);
+            Rotation2d bl_angle = new Rotation2d(Math.atan((Swerve.chassisY/2)/(Swerve.chassisX/2)) + Math.PI/2);
+            Rotation2d br_angle = new Rotation2d(Math.atan((Swerve.chassisY/2)/(Swerve.chassisX/2)));
+
+            // create 2d vectors for turning by assigning magnitudes to the angular vectors
             tl_turnTranslation = new Translation2d(turnX, tl_angle);
-            tr_turnTranslation = new Translation2d(-turnX, tr_angle);
+            tr_turnTranslation = new Translation2d(turnX, tr_angle);
             bl_turnTranslation = new Translation2d(turnX, bl_angle);
             br_turnTranslation = new Translation2d(-turnX, br_angle);
 
         } else {
-            tl_turnTranslation = new Translation2d(0, mod_topLeft.getCurrentAngleRad());
-            tr_turnTranslation = new Translation2d(0, mod_topRight.getCurrentAngleRad());
-            bl_turnTranslation = new Translation2d(0, mod_botLeft.getCurrentAngleRad());
-            br_turnTranslation = new Translation2d(0, mod_botRight.getCurrentAngleRad());
+            turning = false;
         }
 
-        Translation2d tl_combinedVector = tl_moveTranslation.plus(tl_turnTranslation);
-        Translation2d tr_combinedVector = tr_moveTranslation.plus(tr_turnTranslation);
-        Translation2d bl_combinedVector = bl_moveTranslation.plus(bl_turnTranslation);
-        Translation2d br_combinedVector = br_moveTranslation.plus(br_turnTranslation);
+        if (turning || moving) {
 
-        SwerveModuleState tl_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(tl_combinedVector.getX(), tl_combinedVector.getY()), tl_combinedVector.getAngle()), mod_topLeft.getCurrentAngleRad());
-        SwerveModuleState tr_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(tr_combinedVector.getX(), tr_combinedVector.getY()), tr_combinedVector.getAngle()), mod_topRight.getCurrentAngleRad());
-        SwerveModuleState bl_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(bl_combinedVector.getX(), bl_combinedVector.getY()), bl_combinedVector.getAngle()), mod_botLeft.getCurrentAngleRad());
-        SwerveModuleState br_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(br_combinedVector.getX(), br_combinedVector.getY()), br_combinedVector.getAngle()), mod_botRight.getCurrentAngleRad());
+            // add the movement and turn vectors together
+            Translation2d tl_combinedVector = tl_moveTranslation.plus(tl_turnTranslation);
+            Translation2d tr_combinedVector = tr_moveTranslation.plus(tr_turnTranslation);
+            Translation2d bl_combinedVector = bl_moveTranslation.plus(bl_turnTranslation);
+            Translation2d br_combinedVector = br_moveTranslation.plus(br_turnTranslation);
 
-        SwerveModuleState[] states = {tl_combinedState, tr_combinedState, bl_combinedState, br_combinedState};
+            // create swerve module states using the combined vectors and optimize movement from the current angle to the desired angle
+            SwerveModuleState tl_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(tl_combinedVector.getX(), tl_combinedVector.getY()), tl_combinedVector.getAngle()), mod_topLeft.getCurrentAngleRad());
+            SwerveModuleState tr_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(tr_combinedVector.getX(), tr_combinedVector.getY()), tr_combinedVector.getAngle()), mod_topRight.getCurrentAngleRad());
+            SwerveModuleState bl_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(bl_combinedVector.getX(), bl_combinedVector.getY()), bl_combinedVector.getAngle()), mod_botLeft.getCurrentAngleRad());
+            SwerveModuleState br_combinedState = SwerveModuleState.optimize(new SwerveModuleState(Math.hypot(br_combinedVector.getX(), br_combinedVector.getY()), br_combinedVector.getAngle()), mod_botRight.getCurrentAngleRad());
 
-        sys_drive.setStates(states);
+            SwerveModuleState[] states = {tl_combinedState, tr_combinedState, bl_combinedState, br_combinedState};
+
+            // pass the states to the drivetrain
+            sys_drive.setStates(states);
+        } else {
+
+            // creates idling module states
+            SwerveModuleState tl_restState = new SwerveModuleState(0, mod_topLeft.getCurrentAngleRad());
+            SwerveModuleState tr_restState = new SwerveModuleState(0, mod_topRight.getCurrentAngleRad());
+            SwerveModuleState bl_restState = new SwerveModuleState(0, mod_botLeft.getCurrentAngleRad());
+            SwerveModuleState br_restState = new SwerveModuleState(0, mod_botRight.getCurrentAngleRad());
+
+            SwerveModuleState[] states = {tl_restState, tr_restState, bl_restState, br_restState};
+
+            // passes the states to drive train
+            sys_drive.setStates(states);
+        }
 
     }
 
